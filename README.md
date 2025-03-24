@@ -9,7 +9,7 @@ Before setting up this project, ensure you have the following installed:
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [Docker](https://docs.docker.com/get-docker/)
-- [DBT CLI](https://docs.getdbt.com/docs/get-started/getting-started-dbt-core)
+- [DBT]([https://docs.getdbt.com/docs/get-started/getting-started-dbt-core](https://docs.getdbt.com/docs/core/installation-overview))
 - [Snowflake Account](https://signup.snowflake.com/)
 - OpenSSL (Required for key-pair generation) - Install from [OpenSSL](https://slproweb.com/products/Win32OpenSSL.html) (for Windows)
 
