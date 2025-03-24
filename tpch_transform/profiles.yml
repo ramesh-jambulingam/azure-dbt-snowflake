@@ -1,0 +1,37 @@
+tpch_transform:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      account: XZ46412.uk-south.azure
+
+      user: RAMESH
+      private_key_path: /Users/Windows/rsa_key.p8
+      private_key_passphrase: "ramesh"
+      role: ACCOUNTADMIN
+      database: DBT_MODELS
+      warehouse: COMPUTE_WH
+      schema: staging
+      client_session_keep_alive: False
+      connect_retries: 0
+      connect_timeout: 10
+      retry_on_database_errors: False
+      retry_all: False 
+      reuse_connections: False
+    pro:
+      type: snowflake
+      account: XZ46412.uk-south.azure
+
+      user: RAMESH
+      private_key_path: /snowflake_dbt.pem
+      private_key_passphrase: "ramesh"
+      role: ACCOUNTADMIN
+      database: DBT_MODELS
+      warehouse: COMPUTE_WH
+      schema: staging
+      client_session_keep_alive: False
+      connect_retries: 0
+      connect_timeout: 10
+      retry_on_database_errors: False
+      retry_all: False 
+      reuse_connections: False
