@@ -1,7 +1,16 @@
 # Azure DBT Snowflake
 
 ## Overview
-This repository sets up an Azure-based environment for running dbt (Data Build Tool) with Snowflake. The setup includes infrastructure automation with Terraform and a CI/CD pipeline for deploying dbt transformations.
+This repository configures an Azure-based environment for running dbt (Data Build Tool) with Snowflake. It includes infrastructure automation using Terraform and a CI/CD pipeline for deploying dbt transformations. The setup utilizes Snowflake sample tables, CUSTOMERS and ORDERS, for transformation exercises.
+
+Note: 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.
+      2. Integration with ADF to colelct data from external sources will be updated later (as the main focus to explore DBT and its its capability with Snowflake integartion)
+
+## Architecture
+
+<p align="center">
+  <img src="./images/snowflake_architecture.png" width="1500" title="hover text">
+</p>
 
 ## Prerequisites
 Before setting up this project, ensure you have the following installed:
@@ -9,7 +18,7 @@ Before setting up this project, ensure you have the following installed:
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [Docker](https://docs.docker.com/get-docker/)
-- [DBT CLI](https://docs.getdbt.com/docs/get-started/getting-started-dbt-core)
+- [DBT](https://docs.getdbt.com/docs/core/installation-overview)
 - [Snowflake Account](https://signup.snowflake.com/)
 - OpenSSL (Required for key-pair generation) - Install from [OpenSSL](https://slproweb.com/products/Win32OpenSSL.html) (for Windows)
 
@@ -35,28 +44,68 @@ az account set --subscription <subscription-id>
 ```
 
 ### 2. Setup Terraform State Backend
+
+To set Infrastructure through Terraform, must execute code in the baseline folder to deploy Resource groups, Azure Key Vault and Azure container Registry. 
+Terraform stores its state in an Azure Storage Account. Hence must have a storgae account for Terraform init to succeed. If the storage account does not exist, create it manually or automate the creation.
+
+### 3. Initialize and Apply Terraform Configuration (Baseline)
 Terraform stores its state in an Azure Storage Account. If the storage account does not exist, you need to create it manually or automate the creation.
 
-To create the storage account using Terraform:
+#### 3.1 (OPTION 1 - Manual Creation of Storage Account and Container) 
+Create Storage Account and Container either Azure CLI script or Azure Portal 
 ```sh
-cd baseline
-terraform apply -auto-approve
+az group create --name az-uks-syn-pract-cloud-baseline-rg01-pro --location uksouth
 ```
+```sh
+az storage account create --name azukssynbasstategsa01pro --resource-group az-uks-syn-pract-cloud-baseline-rg01-pro --location uksouth --sku Standard_LRS
+```
+```sh
+az storage container create --name tfstate --account-name azukssynbasstategsa01pro
+```
+Then execute the below 2 commands successfully in baseline folder
+```sh
+terraform init
+```
+The optional command to check what resources going to deployed and track changes use below command
+```sh
+terraform plan
+```
+```sh
+terraform apply
+```
+#### 3.2 (OPTION 2 - Automate Creation of Storage Account and Container) 
+To automate creation of Storage Account and Container execute terraform init and terraform apply successfully once without backend references (backend.tf file in both baseline and infra folders and also "terraform_remote_state" resource in infra folder. Execute first in baseline folder and then in infra folder after set up key pair as mentioned in next section 3.3)
 
-If the backend is not configured correctly, check `backend.tf` under the `baseline` folder and ensure the storage account exists.
-
-### 3. Initialize and Apply Terraform Configuration
-After setting up the storage backend, initialize Terraform:
+Terraform initialized by executing below command:
 ```sh
 terraform init
 ```
 
 Then, apply the Terraform configuration:
 ```sh
-terraform apply -auto-approve
+terraform apply
+```
+#### 3.3 SNOWFLAKE KEY
+After deploying the baseline, the next step is to create a secret in Key Vault for the Snowflake key. This requires generating a key in Snowflake by following [this guide] (https://docs.snowflake.com/en/user-guide/key-pair-auth). Once the key is created, convert it to Base64 using the following command and then and store it as a secret in Azure Key Vault.
+
+```sh
+base64 -i snowflake_dbt.p8
+```
+#### 3.4 Deployment of ACI
+The ACI deployment uses the code in the infra folder, keeping baseline infrastructure separate from development. Any dbt code changes trigger only relevant resource updates. The container image for deployment is passed as a variable, handled seamlessly in the CI/CD pipeline.
+Execute the below 2 commands successfully in infra folder
+```sh
+terraform init
 ```
 
-### 4. Build and Push Docker Image
+Then, apply the Terraform configuration:
+```sh
+terraform apply 
+```
+Use environment variable image_version=latest when prompts.
+
+#### 3.5 (OPTIONAL) Build and Push Docker Image
+In case of issues with docker image inaccessible or similar try the below commands to build/pull a dbt image and push to ACR
 Authenticate to the Azure Container Registry (ACR):
 ```sh
 az acr login --name <acr_name>
@@ -70,25 +119,74 @@ Push the image to ACR:
 docker push <acr_name>.azurecr.io/dbt/tpch_transform:latest
 ```
 
-### 5. Deploy the Azure Container Instance
-Run Terraform in the `infra` directory to deploy the container instance:
-```sh
-cd ../infra
-terraform apply -auto-approve
-```
+### 5. SNOWFLAKE SET UP
+After deploying the infrastructure, we configure Snowflake by setting up an account and creating a warehouse for the demo. The dataset used for transformations is tpch_sf1, specifically the customer and orders tables. For this demo, we use the COMPUTE_WH warehouse, which will be configured in dbt.
 
-### 6. Setup DBT for Local Execution
-Activate the Python virtual environment:
+<p align="center">
+  <img src="./images/snowflake_warehouses.png" width="1500" title="hover text">
+</p>
+
+To store transformed data, we create a new database called DBT_MODELS with two schemas: staging and staging_intermediate. The staging schema cleans raw data, retaining only relevant columns. The staging_intermediate schema applies business logic to the cleaned data, creating refined datasets. This final layer serves as the foundation for visualization tools or data analysis by data scientists.
+
+<p align="center">
+  <img src="./images/snowflake_databases.png" width="1500" title="hover text">
+</p>
+
+Then generate a certificate in snowflake to connect from our DBT application, to follow this [guide](https://docs.snowflake.com/en/user-guide/key-pair-auth)
+
+### 6. Setup DBT 
+DBT (Data Build Tool) is a powerful data transformation tool that enables data teams and analysts to efficiently manage, transform, and document data within their data warehouses. Built for SQL users, DBT streamlines development, testing, and deployment through a code-driven and collaborative workflow. Since DBT runs transformations within the data warehouse, it doesn’t consume additional processing resources. It also supports various connectors for leading platforms like Snowflake, BigQuery, and Redshift.
+
+DBT allows developers to create reusable configurations and modular SQL-based transformations. One of its key strengths is its seamless integration with CI/CD tools, ensuring best practices in data development.
+
+For this demo, we use the code in the *tpch_transform* folder and review key configurations. The *dbt_project.yml* file is a crucial component, guiding DBT on how to handle models. Models in DBT represent tables or views in the data warehouse and are defined using SQL files. They are the building blocks of data transformations, making data organization and structuring more modular and reusable.
+
+A key aspect is how we persist model data in Snowflake. In the staging schema, data is stored as views, while in the intermediate schema, it is saved as final tables.
+
+Another crucial file is *profiles.yml*. This configuration file defines the database connection profiles that DBT uses to run transformations. It allows DBT to connect to different environments (development, testing, production) while managing credentials and configurations for each. In this case, the configuration is set up to connect to Snowflake.
+
+This example includes two profiles: one for development and another for production. Each profile defines the connection details, warehouse, role, user credentials, and additional settings like timeout and the default schema for persisting data if none is specified in the model.
+
+To build the image, we use the Dockerfile, which is based on Azure's provided image (Check section 3.5 above for commands if any errors/issues). It also installs required libraries and the application to enable execution.
+
+Lastly, we have the *entrypoint.sh* configuration file, which will be used once the image is uploaded. This script not only runs DBT but also retrieves the Snowflake certificate by connecting to the key vault. It first obtains a connection token using the container instance's profile, then retrieves the *snowflake_certificate* secret, which is set as an environment variable in the container's infrastructure.
+
+In the transformation section, we will focus on the *models* folder, where the transformation logic is defined. It contains two models: staging and intermediate. The staging model simply reads from the *orders* and *customers* tables to generate two views. The view definitions are found in the *schema.yml* file, while the connection to the source tables is outlined in the *stg_sources.yaml* file. The other two *.sql* files contain the logic for selecting specific fields from these tables and creating new views with defined aliases.
+
+In the intermediate model, the structure is similar, but there is no need to reconnect to the source tables, as this connection has already been established in the staging model. The *.sql* files contain the logic for performing joins and other operations between the tables from the staging model.
+
+(Optional) Activate the Python virtual environment:
 ```sh
-source dbt_env/bin/activate  # macOS/Linux
-# OR
 .\dbt_env\Scripts\activate   # Windows PowerShell
 ```
-
 Run dbt transformations:
 ```sh
 dbt run
 ```
+
+### 7. Github Actions setup
+
+GitHub Actions is a workflow automation platform that enables developers to automate software development tasks within their GitHub repositories. It allows users to define custom workflows triggered by events like commits, pull requests, releases, and more.
+
+The high level architecture is:
+
+<p align="center">
+  <img src="./images/snowflake_architecture-CI-CD.png" width="1000" title="hover text">
+</p>
+
+For this demo, we've created a flow that triggers the GitHub Action whenever a new commit is made to the main branch. This GitHub Action consists of two stages: First, it builds and publishes the image to the Azure Container Registry by logging into Azure using credentials stored on GitHub. The second stage deploys the infrastructure, using the code from the folder mentioned earlier. During infrastructure deployment, we pass the version of the image we built earlier as a variable.
+
+Here’s the configuration of the secrets we set up:
+
+<p align="center">
+  <img src="./images/secrets-github.png" width="1000" title="hover text">
+</p>
+
+To create AZURE_CREDENTIALS secret use below command
+```sh
+az ad sp create-for-rbac --name "terraform-sp" --role Contributor --scopes /subscriptions/<SUBSCRIPTION_ID> --sdk-auth
+```
+Refer .github section for exact configuration for Github Actions
 
 ### 7. Troubleshooting Issues
 #### a. Docker Engine Error on Windows

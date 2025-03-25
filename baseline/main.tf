@@ -35,6 +35,7 @@ resource "azurerm_key_vault" "keyvault" {
   tags = var.tags 
 }
 
+#Keep this resource only if creating Storage Account and Container using terraform not by Azure CLI/Portal
 resource "azurerm_storage_account" "storageaccount" {
   name                     = "azukssynbasstategsa01pro"
   resource_group_name      = azurerm_resource_group.rg.name
@@ -43,12 +44,14 @@ resource "azurerm_storage_account" "storageaccount" {
   account_replication_type = "LRS"
 }
 
+#Keep this resource only if creating Storage Account and Container using terraform not by Azure CLI/Portal
 resource "azurerm_storage_container" "storagecontainer" {
   name                  = "az-uks-syn-pract-cloud-tfstate-container01-pro"
   storage_account_name  = azurerm_storage_account.storageaccount.name
   container_access_type = "private"
 }
 
+#Keep this resource only if creating Storage Account and Container using terraform not by Azure CLI/Portal
 # Wait for the storage container before using backend
 resource "null_resource" "wait_for_storage" {
   depends_on = [azurerm_storage_container.storagecontainer]
