@@ -180,7 +180,7 @@ Run dbt transformations:
 dbt run
 ```
 
-## 7. Github Actions setup
+### 7. Github Actions setup
 
 GitHub Actions is a workflow automation platform that enables developers to automate software development tasks within their GitHub repositories. It allows users to define custom workflows triggered by events like commits, pull requests, releases, and more.
 
@@ -204,7 +204,7 @@ az ad sp create-for-rbac --name "terraform-sp" --role Contributor --scopes /subs
 ```
 Refer .github section for exact configuration for Github Actions
 
-### 6. Troubleshooting Issues
+## 6. Troubleshooting Issues
 #### a. Docker Engine Error on Windows
 If you encounter an error related to Docker Desktop Linux Engine:
 ```sh
@@ -249,34 +249,34 @@ Use the public key in Snowflake user settings.
 
 #### e. Useful Commands
 
-# Apply Terraform with specific variable
+Apply Terraform with specific variable
 ```sh terraform apply -auto-approve -var='image_version=${image_version}'```
 
-# Initialize Terraform with migration
+Initialize Terraform with migration
 ```sh terraform init -migrate-state```
 
-# Apply Terraform for a specific resource
+Apply Terraform for a specific resource
 ```sh terraform apply -target=azurerm_resource_group.rg -auto-approve```
 
-# List Azure Container Registries in a specific resource group
+List Azure Container Registries in a specific resource group
 ```sh az acr list --resource-group az-uks-syn-pract-cloud-baseline-rg01-pro --output table```
 
-# Login to Azure Container Registry
+Login to Azure Container Registry
 ```sh az acr login --name dbtjobs```
 
-# Build a Docker image
+Build a Docker image
 ```sh docker build -t dbtjobs.azurecr.io/dbt/tpch_transform:latest .```
 
-# Activate Python virtual environment (Windows PowerShell)
+Activate Python virtual environment (Windows PowerShell)
 ```sh dbt_env\Scripts\activate```
 
-# Set PowerShell execution policy to allow script execution (if needed)
+Set PowerShell execution policy to allow script execution (if needed)
 ```sh Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser```
 
-# Retrieve Azure Container Registry username
+Retrieve Azure Container Registry username
 ```sh az acr credential show --name dbtjobs --query "username" --output tsv```
 
-# Retrieve Azure Container Registry password
+Retrieve Azure Container Registry password
 ```sh az acr credential show --name dbtjobs --query "passwords[0].value" --output tsv```
 
 
