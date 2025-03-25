@@ -134,7 +134,6 @@ Push the image to ACR:
 ```sh
 docker push <acr_name>.azurecr.io/dbt/tpch_transform:latest
 ```
-
 ### 5. SNOWFLAKE SET UP
 After deploying the infrastructure, we configure Snowflake by setting up an account and creating a warehouse for the demo. The dataset used for transformations is *tpch_sf1*, specifically the *customer* and *orders* tables. For this demo, we use the *COMPUTE_WH* warehouse, which will be configured in dbt.
 
