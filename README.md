@@ -1,9 +1,9 @@
-# Azure DBT Snowflake
+# Get started with DBT (Azure, Snowflake integration)
 
 ## Overview
-This repository configures an Azure-based environment for running dbt (Data Build Tool) with Snowflake. It includes infrastructure automation using Terraform and a CI/CD pipeline for deploying dbt transformations. The setup utilizes Snowflake sample tables, CUSTOMERS and ORDERS, for transformation exercises.
+This repository configures an Azure-based environment for running *DBT* (Data Build Tool) with *Snowflake*. It includes infrastructure automation using *Terraform* and a *CI/CD pipeline* for deploying dbt transformations. The setup utilizes Snowflake sample tables *CUSTOMERS* and *ORDERS*, for transformation exercises.
 
-Note: 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.
+Note: 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.<br>  
       2. Integration with ADF to colelct data from external sources will be updated later (as the main focus to explore DBT and its its capability with Snowflake integartion)
 
 ## Architecture
@@ -13,12 +13,12 @@ Note: 1. These steps were executed on a Windows machine. Adjust commands or scri
 </p>
 
 ## Prerequisites
-Before setting up this project, ensure you have the following installed:
+Before setting up this project, ensure you have the following installed in local or virual envionments whichever preferred:
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
 - [Docker](https://docs.docker.com/get-docker/)
-- [DBT](https://docs.getdbt.com/docs/core/installation-overview)
+- [DBT](https://docs.getdbt.com/docs/core/installation-overview) 
 - [Snowflake Account](https://signup.snowflake.com/)
 - OpenSSL (Required for key-pair generation) - Install from [OpenSSL](https://slproweb.com/products/Win32OpenSSL.html) (for Windows)
 
@@ -43,15 +43,15 @@ Ensure you have the correct Azure subscription selected:
 az account set --subscription <subscription-id>
 ```
 
-### 2. Setup Terraform State Backend
+### 2. Terraform State Backend
 
-To set Infrastructure through Terraform, must execute code in the baseline folder to deploy Resource groups, Azure Key Vault and Azure container Registry. 
-Terraform stores its state in an Azure Storage Account. Hence must have a storgae account for Terraform init to succeed. If the storage account does not exist, create it manually or automate the creation.
+To set Infrastructure through Terraform, must execute code in the *baseline* folder to deploy Resource groups, Azure Key Vault and Azure container Registry. 
+Terraform stores its state in an Azure Storage Account. Hence must have a storgae account for *terraform init* to succeed. If the storage account does not exist, create it manually or automate the creation.
 
 ### 3. Initialize and Apply Terraform Configuration (Baseline)
-Terraform stores its state in an Azure Storage Account. If the storage account does not exist, you need to create it manually or automate the creation.
+If the storage account does not exist, you need to create it manually or automate the creation.
 
-#### 3.1 (OPTION 1 - Manual Creation of Storage Account and Container) 
+#### 3.1 (OPTION 1) - Manual Creation of Storage Account and Container
 Create Storage Account and Container either Azure CLI script or Azure Portal 
 ```sh
 az group create --name az-uks-syn-pract-cloud-baseline-rg01-pro --location uksouth
@@ -74,7 +74,7 @@ terraform plan
 terraform apply
 ```
 #### 3.2 (OPTION 2 - Automate Creation of Storage Account and Container) 
-To automate creation of Storage Account and Container execute terraform init and terraform apply successfully once without backend references (backend.tf file in both baseline and infra folders and also "terraform_remote_state" resource in infra folder. Execute first in baseline folder and then in infra folder after set up key pair as mentioned in next section 3.3)
+To automate creation of Storage Account and Container execute *terraform init* and *terraform apply* successfully once without backend references (backend.tf file in both baseline and infra folders and also *terraform_remote_state* resource in *infra* folder. Execute first in *baseline* folder and then in *infra* folder after set up key pair as mentioned in next section 3.3)
 
 Terraform initialized by executing below command:
 ```sh
@@ -86,13 +86,13 @@ Then, apply the Terraform configuration:
 terraform apply
 ```
 #### 3.3 SNOWFLAKE KEY
-After deploying the baseline, the next step is to create a secret in Key Vault for the Snowflake key. This requires generating a key in Snowflake by following [this guide] (https://docs.snowflake.com/en/user-guide/key-pair-auth). Once the key is created, convert it to Base64 using the following command and then and store it as a secret in Azure Key Vault.
+After deploying the baseline, the next step is to create a secret in Key Vault for the Snowflake key. This requires generating a key in Snowflake by following [this guide](https://docs.snowflake.com/en/user-guide/key-pair-auth). Once the key is created, convert it to Base64 using the following command and then and store it as a secret in Azure Key Vault.
 
 ```sh
 base64 -i snowflake_dbt.p8
 ```
 #### 3.4 Deployment of ACI
-The ACI deployment uses the code in the infra folder, keeping baseline infrastructure separate from development. Any dbt code changes trigger only relevant resource updates. The container image for deployment is passed as a variable, handled seamlessly in the CI/CD pipeline.
+The ACI deployment uses the code in the *infra* folder, keeping baseline infrastructure separate from development. Any dbt code changes trigger only relevant resource updates. The container image for deployment is passed as a variable, handled seamlessly in the *CI/CD pipeline*.
 Execute the below 2 commands successfully in infra folder
 ```sh
 terraform init
@@ -120,13 +120,13 @@ docker push <acr_name>.azurecr.io/dbt/tpch_transform:latest
 ```
 
 ### 5. SNOWFLAKE SET UP
-After deploying the infrastructure, we configure Snowflake by setting up an account and creating a warehouse for the demo. The dataset used for transformations is tpch_sf1, specifically the customer and orders tables. For this demo, we use the COMPUTE_WH warehouse, which will be configured in dbt.
+After deploying the infrastructure, we configure Snowflake by setting up an account and creating a warehouse for the demo. The dataset used for transformations is *tpch_sf1*, specifically the *customer* and *orders* tables. For this demo, we use the *COMPUTE_WH* warehouse, which will be configured in dbt.
 
 <p align="center">
   <img src="./images/snowflake_warehouses.png" width="1500" title="hover text">
 </p>
 
-To store transformed data, we create a new database called DBT_MODELS with two schemas: staging and staging_intermediate. The staging schema cleans raw data, retaining only relevant columns. The staging_intermediate schema applies business logic to the cleaned data, creating refined datasets. This final layer serves as the foundation for visualization tools or data analysis by data scientists.
+To store transformed data, we create a new database called *DBT_MODELS* with two schemas: *staging* and *staging_intermediate*. The staging schema cleans raw data, retaining only relevant columns. The staging_intermediate schema applies business logic to the cleaned data, creating refined datasets. This final layer serves as the foundation for visualization tools or data analysis by data scientists.
 
 <p align="center">
   <img src="./images/snowflake_databases.png" width="1500" title="hover text">
@@ -211,7 +211,7 @@ terraform apply -auto-approve -target=azurerm_storage_account.storageaccount
 #### c. DBT Command Not Found
 If running `dbt run` results in an error:
 ```sh
-' dbt ' is not recognized as an internal or external command
+'dbt' is not recognized as an internal or external command
 ```
 Ensure dbt is installed and activated in the virtual environment:
 ```sh
