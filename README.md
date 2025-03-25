@@ -10,7 +10,7 @@
     - [2. Terraform State Backend](#2-terraform-state-backend)  
     - [3. Initialize and Apply Terraform Configuration (Baseline)](#3-initialize-and-apply-terraform-configuration-baseline)  
     - [4. Deployment of ACI](#4-deployment-of-aci)  
-    - [5. Snowflake Setup](#5-snowflake-setup)  
+    - [5. Snowflake Setup](#5-snowflake-set-up)  
     - [6. Setup DBT](#6-setup-dbt)  
     - [7. GitHub Actions Setup](#7-github-actions-setup)  
 6. [Troubleshooting Issues](#troubleshooting-issues)  
@@ -134,7 +134,7 @@ Push the image to ACR:
 ```sh
 docker push <acr_name>.azurecr.io/dbt/tpch_transform:latest
 ```
-### 5. SNOWFLAKE SET UP
+### 5. Snowflake Set up
 After deploying the infrastructure, we configure Snowflake by setting up an account and creating a warehouse for the demo. The dataset used for transformations is *tpch_sf1*, specifically the *customer* and *orders* tables. For this demo, we use the *COMPUTE_WH* warehouse, which will be configured in dbt.
 
 <p align="center">
@@ -203,7 +203,7 @@ az ad sp create-for-rbac --name "terraform-sp" --role Contributor --scopes /subs
 ```
 Refer .github section for exact configuration for Github Actions
 
-## 6. Troubleshooting Issues
+## Troubleshooting Issues
 #### a. Docker Engine Error on Windows
 If you encounter an error related to Docker Desktop Linux Engine:
 ```sh
