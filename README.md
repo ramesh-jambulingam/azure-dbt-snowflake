@@ -22,7 +22,7 @@ This repository configures an Azure-based environment for running *DBT* (Data Bu
 
 > **Note:**  
 > 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.  
-> 2. Integration with ADF to collect data from external sources will be updated later (main focus is on exploring DBT and its capability with Snowflake integration).
+> 2. Integration with ADF to collect data from external sources will be updated later (main focus for now to explore DBT and its capability with Azure, Snowflake integration).
 
 ## Architecture
 <p align="center">
