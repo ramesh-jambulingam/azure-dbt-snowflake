@@ -1,36 +1,19 @@
-# Get Started with DBT (Azure, Snowflake Integration)
-
-## Table of Contents
-1. [Overview](#overview)  
-2. [Architecture](#architecture)  
-3. [Prerequisites](#prerequisites)  
-4. [Project Structure](#project-structure)  
-5. [Setup Guide](#setup-guide)  
-    - [1. Authenticate with Azure](#1-authenticate-with-azure)  
-    - [2. Terraform State Backend](#2-terraform-state-backend)  
-    - [3. Initialize and Apply Terraform Configuration (Baseline)](#3-initialize-and-apply-terraform-configuration-baseline)  
-    - [4. Deployment of ACI](#4-deployment-of-aci)  
-    - [5. Snowflake Setup](#5-snowflake-setup)  
-    - [6. Setup DBT](#6-setup-dbt)  
-    - [7. GitHub Actions Setup](#7-github-actions-setup)  
-6. [Troubleshooting Issues](#troubleshooting-issues)  
-7. [References](#references)  
-8. [Conclusion](#conclusion)  
+# Get started with DBT (Azure, Snowflake integration)
 
 ## Overview
-This repository configures an Azure-based environment for running *DBT* (Data Build Tool) with *Snowflake*. It includes infrastructure automation using *Terraform* and a *CI/CD pipeline* for deploying DBT transformations. The setup uses Snowflake sample tables *CUSTOMERS* and *ORDERS* for transformation exercises.
+This repository configures an Azure-based environment for running *DBT* (Data Build Tool) with *Snowflake*. It includes infrastructure automation using *Terraform* and a *CI/CD pipeline* for deploying dbt transformations. The setup utilizes Snowflake sample tables *CUSTOMERS* and *ORDERS*, for transformation exercises.
 
-> **Note:**  
-> 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.  
-> 2. Integration with ADF to collect data from external sources will be updated later (main focus is on exploring DBT and its capability with Snowflake integration).
+Note: 1. These steps were executed on a Windows machine. Adjust commands or scripts accordingly for other operating systems.<br>  
+      2. Integration with ADF to colelct data from external sources will be updated later (as the main focus to explore DBT and its its capability with Snowflake integartion)
 
 ## Architecture
+
 <p align="center">
   <img src="./images/snowflake_architecture.png" width="1500" title="hover text">
 </p>
 
 ## Prerequisites
-Before setting up this project, ensure you have the following installed in your local or virtual environment (whichever preferred):
+Before setting up this project, ensure you have the following installed in local or virual envionments whichever preferred:
 
 - [Azure CLI](https://learn.microsoft.com/en-us/cli/azure/install-azure-cli)
 - [Terraform](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli)
@@ -47,6 +30,7 @@ Before setting up this project, ensure you have the following installed in your 
 ├── .github/workflows/        # CI/CD workflows for deployment
 └── README.md                 # This documentation
 ```
+
 ## Setup Guide
 
 ### 1. Authenticate with Azure
@@ -89,7 +73,7 @@ terraform plan
 ```sh
 terraform apply
 ```
-#### 3.2 (OPTION 2) - Automate Creation of Storage Account and Container 
+#### 3.2 (OPTION 2 - Automate Creation of Storage Account and Container) 
 To automate creation of Storage Account and Container execute *terraform init* and *terraform apply* successfully once without backend references (backend.tf file in both baseline and infra folders and also *terraform_remote_state* resource in *infra* folder. Execute first in *baseline* folder and then in *infra* folder after set up key pair as mentioned in next section 3.3)
 
 Terraform initialized by executing below command:
@@ -102,12 +86,12 @@ Then, apply the Terraform configuration:
 terraform apply
 ```
 #### 3.3 SNOWFLAKE KEY
-After deploying the baseline, the next step is to create a secret in Key Vault for the Snowflake key. This requires generating a key in Snowflake by following this [guide](https://docs.snowflake.com/en/user-guide/key-pair-auth). Once the key is created, convert it to Base64 using the following command and then and store it as a secret in Azure Key Vault.
+After deploying the baseline, the next step is to create a secret in Key Vault for the Snowflake key. This requires generating a key in Snowflake by following [this guide](https://docs.snowflake.com/en/user-guide/key-pair-auth). Once the key is created, convert it to Base64 using the following command and then and store it as a secret in Azure Key Vault.
 
 ```sh
 base64 -i snowflake_dbt.p8
 ```
-### 4. Deployment of ACI
+#### 3.4 Deployment of ACI
 The ACI deployment uses the code in the *infra* folder, keeping baseline infrastructure separate from development. Any dbt code changes trigger only relevant resource updates. The container image for deployment is passed as a variable, handled seamlessly in the *CI/CD pipeline*.
 Execute the below 2 commands successfully in infra folder
 ```sh
@@ -120,7 +104,7 @@ terraform apply
 ```
 Use environment variable image_version=latest when prompts.
 
-#### (OPTIONAL) Build and Push Docker Image
+#### 3.5 (OPTIONAL) Build and Push Docker Image
 In case of issues with docker image inaccessible or similar try the below commands to build/pull a dbt image and push to ACR
 Authenticate to the Azure Container Registry (ACR):
 ```sh
@@ -148,7 +132,7 @@ To store transformed data, we create a new database called *DBT_MODELS* with two
   <img src="./images/snowflake_databases.png" width="1500" title="hover text">
 </p>
 
-Then generate a certificate in snowflake to connect from our DBT application, to follow this [guide](https://docs.snowflake.com/en/user-guide/key-pair-auth).
+Then generate a certificate in snowflake to connect from our DBT application, to follow this [guide](https://docs.snowflake.com/en/user-guide/key-pair-auth)
 
 ### 6. Setup DBT 
 DBT (Data Build Tool) is a powerful data transformation tool that enables data teams and analysts to efficiently manage, transform, and document data within their data warehouses. Built for SQL users, DBT streamlines development, testing, and deployment through a code-driven and collaborative workflow. Since DBT runs transformations within the data warehouse, it doesn’t consume additional processing resources. It also supports various connectors for leading platforms like Snowflake, BigQuery, and Redshift.
@@ -180,7 +164,7 @@ Run dbt transformations:
 dbt run
 ```
 
-## 7. Github Actions setup
+### 7. Github Actions setup
 
 GitHub Actions is a workflow automation platform that enables developers to automate software development tasks within their GitHub repositories. It allows users to define custom workflows triggered by events like commits, pull requests, releases, and more.
 
@@ -204,7 +188,7 @@ az ad sp create-for-rbac --name "terraform-sp" --role Contributor --scopes /subs
 ```
 Refer .github section for exact configuration for Github Actions
 
-### 6. Troubleshooting Issues
+### 7. Troubleshooting Issues
 #### a. Docker Engine Error on Windows
 If you encounter an error related to Docker Desktop Linux Engine:
 ```sh
@@ -247,39 +231,6 @@ openssl rsa -in rsa_key.pem -pubout -out rsa_key.pub
 ```
 Use the public key in Snowflake user settings.
 
-#### e. Useful Commands
-
-# Apply Terraform with specific variable
-```sh terraform apply -auto-approve -var='image_version=${image_version}'```
-
-# Initialize Terraform with migration
-```sh terraform init -migrate-state```
-
-# Apply Terraform for a specific resource
-```sh terraform apply -target=azurerm_resource_group.rg -auto-approve```
-
-# List Azure Container Registries in a specific resource group
-```sh az acr list --resource-group az-uks-syn-pract-cloud-baseline-rg01-pro --output table```
-
-# Login to Azure Container Registry
-```sh az acr login --name dbtjobs```
-
-# Build a Docker image
-```sh docker build -t dbtjobs.azurecr.io/dbt/tpch_transform:latest .```
-
-# Activate Python virtual environment (Windows PowerShell)
-```sh dbt_env\Scripts\activate```
-
-# Set PowerShell execution policy to allow script execution (if needed)
-```sh Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser```
-
-# Retrieve Azure Container Registry username
-```sh az acr credential show --name dbtjobs --query "username" --output tsv```
-
-# Retrieve Azure Container Registry password
-```sh az acr credential show --name dbtjobs --query "passwords[0].value" --output tsv```
-
-
 ## References
 - [DBT Documentation](https://docs.getdbt.com/docs/introduction)
 - [Terraform Azure Provider](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs)
@@ -291,3 +242,4 @@ This guide provides step-by-step instructions to set up and deploy dbt on Azure 
 
 ---
 _Last updated: March 2025_
+
